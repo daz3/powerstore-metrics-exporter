@@ -45,8 +45,10 @@ type Storage struct {
 }
 
 type Exporter struct {
-	Port     int `yaml:"port"`
-	ReqLimit int `yaml:"reqLimit"`
+	Port     int    `yaml:"port"`
+	ReqLimit int    `yaml:"reqLimit"`
+	Cert     string `yaml:"cert"`
+	Key      string `yaml:"key"`
 }
 
 type Logs struct {
@@ -66,8 +68,9 @@ func GetConfig(configPath string) *Config {
 	if err != nil {
 		stdlog.Fatalf("Error reading configuration file: %s\n", err)
 	}
+	expandedyaml := os.ExpandEnv(string(yamlFile))
 	config := Config{}
-	err = yaml.Unmarshal(yamlFile, &config)
+	err = yaml.Unmarshal([]byte(expandedyaml), &config)
 	if err != nil {
 		stdlog.Fatalf("Error Unmarshal yamL file: %s\n", err)
 	}
@@ -75,6 +78,8 @@ func GetConfig(configPath string) *Config {
 }
 
 func PrometheusHandler(registry *prometheus.Registry, logger log.Logger) gin.HandlerFunc {
+	//Check for cert and key file
+
 	handlerOpts := promhttp.HandlerOpts{
 		ErrorLog:      stdlog.New(log.NewStdlibAdapter(level.Error(logger)), "", 0),
 		ErrorHandling: promhttp.ContinueOnError,
